@@ -1,4 +1,4 @@
-# Étape 1 : image avec Composer pour installer les dépendances PHP
+# Étape 1 : image avec Composer
 FROM composer:2 AS composer_stage
 
 # Étape 2 : image principale PHP
@@ -13,21 +13,19 @@ RUN apt-get update && apt-get install -y \
 # Dossier de travail
 WORKDIR /app
 
-# Copier tout le projet Laravel dans l'image
+# Copier tout le projet
 COPY . .
 
 # Copier composer depuis l'étape 1
 COPY --from=composer_stage /usr/bin/composer /usr/bin/composer
 
-# Préparer Laravel + build Vite
-RUN cp .env.example .env || true \
- && composer install --no-dev --optimize-autoloader \
- && php artisan key:generate \
+# Installer dépendances PHP + JS et builder Vite
+RUN composer install --no-dev --optimize-autoloader \
  && npm install \
  && npm run build
 
 # Port utilisé par Render
 ENV PORT=10000
 
-# Commande de démarrage du conteneur
+# Lancer Laravel
 CMD php artisan serve --host=0.0.0.0 --port=${PORT}
